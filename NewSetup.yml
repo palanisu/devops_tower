@@ -1,0 +1,37 @@
+---
+  - name: Setup new environment to access ansible
+    hosts: all
+    gather_facts: false
+    tasks:
+      - name: Setup Hostname
+        hostname:
+          name: '{{ server_name }}'
+      - name: Adding Administrator User
+        user:
+          name: osadmin
+          password: $6$pvM537/JJiLux8bz$Xsd8tE53akcV7VU8sXXf1dccJwRbKnPCMr4NRKr/kn7i24zU5iXOgCmzm9qxAYh6xqTshH.L9jYNF58NZbbM91
+          shell: /bin/bash
+      - name: Add user in sudoers
+        lineinfile:
+          path: /etc/sudoers
+          backup: true
+          insertafter: EOF
+          line: 'osadmin  ALL=(ALL) NOPASSWD: ALL'
+          state: present
+          validate: 'visudo -cf %s'
+      - name: Copy authorized_keys
+        authorized_key: 
+          user: osadmin
+          state: present
+          key: "{{ lookup('file', '/home/osadmin/.ssh/id_rsa.pub')}}"
+
+  - name: Add the server details 
+    hosts: localhost
+    tasks:
+      - name: add server details in hosts
+        lineinfile:
+          path: /etc/hosts
+          backup: true
+          insertafter: EOF
+          line: '192.168.80.223  ansi-host1 \n
+          192.168.80.224  ansi-host2'
